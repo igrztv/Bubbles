@@ -41,7 +41,7 @@ Microphone.prototype.activateMicrophone = function(res){
 		this.DEBUGCANVAS.width = window.innerWidth - 5;
         this.DEBUGCANVAS.height = window.innerHeight - 5;
 		this.waveCanvas.strokeStyle = "black";
-		this.waveCanvas.lineWidth = 4;
+		this.waveCanvas.lineWidth = 1;
 	}
 	this.pitchElem = document.getElementById( "pitch" );
 	this.noteElem = document.getElementById( "note" );
@@ -154,14 +154,15 @@ Microphone.prototype.updatePitch = function(){
 	// TODO: Paint confidence meter on canvasElem here.
 
 	if (this.DEBUGCANVAS) {  // This draws the current waveform, useful for debugging
+		var amp = window.innerHeight / 8;
 		this.waveCanvas.clearRect(0, 0, this.DEBUGCANVAS.width, this.DEBUGCANVAS.height);
 		this.waveCanvas.strokeStyle = "black";
 		this.waveCanvas.beginPath();
-		this.waveCanvas.moveTo(0, this.DEBUGCANVAS.height/2);
+		this.waveCanvas.moveTo(0, this.DEBUGCANVAS.height / 2);
 		var freeZone = (this.DEBUGCANVAS.width - this.buf.length)/2;
 		this.waveCanvas.lineTo(freeZone, this.buf[0] + this.DEBUGCANVAS.height/2);
 		for (var i = 1; i < this.buf.length; i++) {
-			this.waveCanvas.lineTo(freeZone + i, this.DEBUGCANVAS.height/2 + (this.buf[i]*128));
+			this.waveCanvas.lineTo(freeZone + i, this.DEBUGCANVAS.height/2 + (this.buf[i]*amp));
 		}
 		this.waveCanvas.lineTo(freeZone + this.buf.length, this.DEBUGCANVAS.height/2);
 		this.waveCanvas.lineTo(2*freeZone + this.buf.length, this.DEBUGCANVAS.height/2);

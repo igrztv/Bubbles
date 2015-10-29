@@ -9,13 +9,22 @@
 
 		<!--<script src="js/leap-0.6.3.js"></script>
 		<script src="js/leap-plugins-0.1.8.js"></script>
-		<script src="js/leap.js"></script>-->
+		<script src="js/leap.js"></script>
+		<form method="POST" action="/">
+			<input type="text" name="massage" value="text pls">
+			<input type="submit">
+		</form>
+
+		<input type="text" value="f" size="100" id="acc" width="1000px">-->
 		
 		<script src="js/pitchdetect.js"></script>
 		<script src="js/bubbles.js"></script>
 
 		<canvas style="display: block; position: absolute" id="waveform"></canvas>
 		<canvas style="display: block; position: absolute" id="bubbles"></canvas>
+		<div style="width: 95%; height: 95%; margin: 1% 1%; position: absolute;">
+			<div style="margin: 20%; opacity: 0;" id="massage">TEXT</div>
+		</div>
 
 		<div id="detector" class="vague" style="display: none">
 			<div class="pitch"><span id="pitch">--</span>Hz</div>
@@ -29,6 +38,26 @@
 		</div>
 
 		<script>
+
+			var signOfTop = 1;
+			var messageOpacity = 0;
+
+			if(window.DeviceMotionEvent){
+				window.addEventListener("devicemotion", motion, false);
+			}else{
+				console.log("DeviceMotionEvent is not supported");
+			}
+
+			var accText = document.getElementById("acc");
+			var massageText = document.getElementById("massage");
+
+			function motion(event){
+				signOfTop = sign(event.accelerationIncludingGravity.y);
+				/*accText.value = "Accelerometer: "
+				+ event.accelerationIncludingGravity.x + ", "
+				+ signOfTop + ", "
+				+ event.accelerationIncludingGravity.z;*/
+			}
 
 			function createBubbleParams(){
 				var x = Math.random() * (window.innerWidth - 0);
@@ -60,11 +89,20 @@
 				};
 			})();
 
+			function sign(val){
+				return (val < 0) ? 1 : -1;
+			};
+
 			function updateFrame(){
 
 				if(mic.updatePitch()){
+					if(messageOpacity < 1){
+						messageOpacity += 0.001;
+						massageText.style.opacity = messageOpacity;
+					}
+					
 					if(forces.Ax < 5){
-						forces.Ax += 0.1;
+						forces.Ax += 0.1 * signOfTop;
 					}
 					if(Math.random() > appearenceProbability){
 						bubbles.push(new MathModel({
