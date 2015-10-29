@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Pitch Detector</title>
+		<link href='http://fonts.googleapis.com/css?family=Alike' rel='stylesheet' type='text/css'>
+		<link rel='stylesheet' type='text/css' href='css/wave.css'>
+	</head>
+	<body style="margin: 0 auto;" id="body">	
+
+		<!--<script src="js/leap-0.6.3.js"></script>
+		<script src="js/leap-plugins-0.1.8.js"></script>
+		<script src="js/leap.js"></script>-->
+		
+		<script src="js/pitchdetect.js"></script>
+		<script src="js/bubbles.js"></script>
+
+		<canvas style="display: block; position: absolute" id="waveform"></canvas>
+		<canvas style="display: block; position: absolute" id="bubbles"></canvas>
+
+		<div id="detector" class="vague" style="display: none">
+			<div class="pitch"><span id="pitch">--</span>Hz</div>
+			<div class="note"><span id="note">--</span></div>   
+			<canvas id="output" width="300" height="42"></canvas>
+			<div id="detune">
+				<span id="detune_amt">--</span>
+				<span id="flat">cents &#9837;</span>
+				<span id="sharp">cents &#9839;</span>
+			</div>
+		</div>
+
+		<script>
+
+			function createBubbleParams(){
+				var x = Math.random() * (window.innerWidth - 0);
+				var y = Math.random() * (window.innerHeight - 0);
+				var vx = Math.random() * (20 - 0);
+				var vy = Math.random() * (20 - 0);
+				var rad = Math.random() * (50 - 30) + 30;
+				return {Rad : rad, pos : {X : x, Y : y}, Vx : vx, Vy : vy, Ax : 0, Ay : 0};
+			};
+
+			//SETTINGS----------
+			var appearenceProbability = 0.9;
+			var minBubbleRadius = 30;
+			var maxBubbleRadius = 50;
+			var minBubbleVelocity = -15;
+			var maxBubbleVelocity = 20;
+			//END SETTINGS------
+
+			var bubblesCanvas;
+			var mic;
+			var bubbles = [];
+			var forces = {Ax : 0, Ay : -0.3};
+			
+
+			var requestAnimFrame = (function(callback) {
+				return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+				function(callback) {
+				  window.setTimeout(callback, 1000 / 60);
+				};
+			})();
+
+			function updateFrame(){
+
+				if(mic.updatePitch()){
+					if(forces.Ax < 5){
+						forces.Ax += 0.1;
+					}
+					if(Math.random() > appearenceProbability){
+						bubbles.push(new MathModel({
+							Rad : Math.random() * (maxBubbleRadius - minBubbleRadius) + minBubbleRadius,
+							pos : {
+								X : Math.random() * maxBubbleRadius * 3 + maxBubbleRadius,
+								Y : Math.random() * maxBubbleRadius * 3 + maxBubbleRadius
+							},
+							Vx : Math.random() * (maxBubbleVelocity - minBubbleVelocity) + minBubbleVelocity,
+							Vy : Math.random() * (maxBubbleVelocity - minBubbleVelocity) + minBubbleVelocity,
+							Ax : 0,
+							Ay : 0
+						}));
+					}
+				}else{
+					if(forces.Ax > 0){
+						forces.Ax -= 0.1;
+					}
+				}
+
+				animate(bubbles, forces, bubblesCanvas);
+
+				requestAnimFrame(function() {
+					updateFrame();
+			    });
+			};			
+
+			window.onload = function() {
+
+				for (var i = 0; i < 10; i++) {
+					bubbles.push(new MathModel(createBubbleParams()));
+				};
+
+				bubblesCanvas = document.getElementById('bubbles');
+				mic = new Microphone();
+				new Promise(function(resolve, reject) {       
+					mic.activateMicrophone(resolve);
+					console.log('mic.activateMicrophone done!');
+				}).then(function(stream){
+					console.log('promise.then');
+					mic.gotStream(stream);
+					updateFrame();
+				});
+			};
+		</script>
+
+	</body>
+</html>

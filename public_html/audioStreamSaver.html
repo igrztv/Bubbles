@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="js/MediaStreamRecorder.js"></script>
+    <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
+    <script src="js/adapter.js"></script>
+
+</head>
+
+<body>
+
+    <div>
+        <button id="start-recording">Start</button>
+        <button id="stop-recording">Stop</button>
+        <button id="pause-recording">Pause</button>
+        <button id="resume-recording">Resume</button>
+        <button id="save-recording">Save</button>
+    </div>
+
+    <div id="audios-container"></div>
+
+    <script>
+    document.querySelector('#start-recording').onclick = function() {
+        navigator.mediaDevices.getUserMedia({audio: true}).then(onMediaSuccess).catch(onMediaError);
+    };
+    document.querySelector('#stop-recording').onclick = function() {
+        mediaRecorder.stop();
+        mediaRecorder.stream.stop();
+    };
+    document.querySelector('#pause-recording').onclick = function() {
+        mediaRecorder.pause();
+    };
+    document.querySelector('#resume-recording').onclick = function() {
+        mediaRecorder.resume();
+    };
+    document.querySelector('#save-recording').onclick = function() {
+        mediaRecorder.save();
+    };
+    var mediaRecorder;
+    function onMediaSuccess(stream) {
+        /*var audio = document.createElement('audio');
+        audio = mergeProps(audio, {
+            controls: true,
+            muted: true,
+            src: URL.createObjectURL(stream)
+        });
+        audio.play();
+        audiosContainer.appendChild(audio);
+        audiosContainer.appendChild(document.createElement('hr'));*/
+        mediaRecorder = new MediaStreamRecorder(stream);
+        mediaRecorder.stream = stream;
+        mediaRecorder.mimeType = 'audio/ogg';
+        //mediaRecorder.audioChannels = !!document.getElementById('left-channel').checked ? 1 : 2;
+        mediaRecorder.ondataavailable = function(blob) {
+            var a = document.createElement('a');
+            a.target = '_blank';
+            a.innerHTML = 'Open Recorded Audio No. ' + (index++) + ' (Size: ' + blob.size + ') Time Length: ' + timeInterval;
+            a.href = URL.createObjectURL(blob);
+            audiosContainer.appendChild(a);
+            audiosContainer.appendChild(document.createElement('hr'));
+            
+            var oReq = new XMLHttpRequest();
+            oReq.open('POST', '/audio', true);
+            oReq.onload = function (oEvent) {
+                console.log('uploaded!');
+            };
+
+            oReq.send(blob);
+        };
+        var timeInterval = 1000;
+        // get blob after specific time interval
+        mediaRecorder.start(timeInterval);
+    }
+    function onMediaError(e) {
+        console.error('media error', e);
+    }
+    var audiosContainer = document.getElementById('audios-container');
+    var index = 1;
+    window.onbeforeunload = function() {
+        document.querySelector('#start-recording').disabled = false;
+    };
+    </script>
+</body>
+
+</html>
